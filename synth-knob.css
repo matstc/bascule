@@ -1,0 +1,61 @@
+synth-knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 180px;
+}
+
+synth-knob .label {
+  text-transform: uppercase;
+  font-size: 70%;
+  color: #999;
+  text-wrap: nowrap;
+}
+
+synth-knob .knob {
+  border-radius: 50%;
+  border: 1px solid black;
+  width: calc(100% - 1rem);
+  aspect-ratio: 1/1;
+  position: relative;
+  cursor: pointer;
+  touch-action: none;
+}
+
+synth-knob .knob.rotating, synth-knob .knob.focused {
+  background-color: #eee;
+}
+
+synth-knob .knob .notch.base-notch {
+  opacity: 0.3;
+}
+
+synth-knob .knob .notch {
+  height: 50%;
+  width: 1px;
+  background-color: black;
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  transform-origin: center bottom;
+}
+
+synth-knob .knob .bascule {
+  width: 90%;
+  height: 1px;
+  background-color: black;
+}
+
+synth-knob .knob img.sticker {
+  width: 90%;
+  position: absolute;
+  top: 50%;
+}
+
+@media screen and (max-width: 1200px) {
+  synth-knob .label {
+    max-width: 70px;
+    overflow: hidden;
+  }
+}

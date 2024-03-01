@@ -1,0 +1,357 @@
+<html lang="en">
+  <head>
+    <title>Bascule User Guide</title>
+    <link rel="shortcut icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1, viewport-fit=auto">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      * {
+        font-family: "Courier New", monospace;
+      }
+      body {
+        margin: 0;
+        padding: 5px;
+        text-align: center;
+        justify-content: center;
+      }
+      article {
+        margin: auto;
+        text-align: left;
+        max-width: 640px;
+        padding-bottom: 12rem;
+      }
+      a {
+        text-underline-offset: 4px;
+      }
+      h1 {
+        font-size: 250%;
+        margin-top: 12rem;
+        margin-bottom: 4rem;
+        width: 100%;
+        text-align: center;
+      }
+      h2 {
+        margin-top: 4rem;
+        margin-bottom: 2rem;
+      }
+      h2:after {
+        margin-top: .4em;
+        content: "";
+        display: block;
+        width: 100%;
+        border-bottom: 1px solid black;
+        transform: rotate(-2deg);
+      }
+      blockquote {
+        transform: rotate(-2deg);
+        font-style: italic;
+        background-color: #eee;
+        border: 1px dashed #999;
+        font-size: 90%;
+        margin: 2rem auto;
+				width: 90%;
+        padding: 2em 10%;
+      }
+      blockquote .quote-content {
+        width: 100%;
+        transform: rotate(2deg);
+      }
+      .quote-attribution {
+        font-style: normal;
+        margin-top: 0.5em;
+        font-size: 90%;
+        color: #666;
+      }
+      .toc {
+        margin: 4rem 0;
+        padding: 0;
+      }
+      .toc ul,
+      .toc li {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        line-height: 1.4em;
+      }
+      .pre-like {
+        display: inline-block;
+        padding: 0 2px;
+        margin: 0;
+        background-color: #eee;
+      }
+      img.audio-chain {
+        max-width: 450px;
+      }
+      .audio-chain-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        background-color: #eee;
+      }
+      h3 {
+        margin-top: 2em;
+        margin-bottom: 0.2em;
+      }
+      h3 + p {
+        margin-top: 0;
+      }
+      img {
+        width: 100%;
+      }
+      img.thin {
+        width: 20%;
+        display: block;
+        margin: auto;
+      }
+      ul {
+        padding-left: 17px;
+      }
+      ol {
+        padding-left: 28px;
+      }
+      ul li, ol li {
+        margin-bottom: 5px;
+      }
+      .hero-image {
+        width: 30%;
+        margin: auto;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+
+    <article>
+      <h1>Bascule User&nbsp;Guide</h1>
+
+      <img src="user-guide/bascule-marquee.png" class="hero-image">
+
+      <ul class="toc">
+        <li>1. <a href="#audio-chain">The Audio Chain</a></li>
+        <li>2. <a href="#waveform-display">The Waveform Display</a></li>
+        <li>3. <a href="#knobs">The Knobs</a></li>
+        <li>4. <a href="#exporting-audio">Exporting Audio</a></li>
+        <li>5. <a href="#granular-synthesis">Granular Synthesis</a></li>
+        <li>6. <a href="#ideas">Ideas</a></li>
+        <li>7. <a href="#questions">Questions &amp; Comments</a></li>
+        <li>8. <a href="#also-see">Also See</a></li>
+      </ul>
+
+      <h2 id="audio-chain">1. The Audio Chain</h2>
+
+      <p>Bascule is a dual granular synthesizer.</p>
+      <p>Each side of the bascule starts out with a sample before going through granulation, filters, and effects. At the very end, both sides are mixed together.</p>
+
+      <blockquote>
+        <div class="quote-content">“A grain of sound is an acoustic event with a duration near the threshold of human auditory perception. This threshold is typically between 1 and 100 ms […]. These are the shortest durations in which differences in duration, frequency, spectrum, amplitude, amplitude envelope, and spatial position can be perceived.”
+          <div class="quote-attribution">The Computer Music Tutorial, chapter 13</div>
+        </div>
+      </blockquote>
+      <p>The beginning of this guide will focus on the audio chain and the various controls available in Bascule. For more on granular synthesis, see the <a href="#granular-synthesis">Granular Synthesis</a> section.</p>
+
+      <p>Each side of the bascule goes through the following audio chain.</p>
+
+      <div class="audio-chain-container">
+        <img src="user-guide/audio-chain.png" class="audio-chain" alt="diagram of the audio chain">
+      </div>
+
+      <h2 id="waveform-display">2. The Waveform Display</h2>
+
+      <p>The top of each side shows the loaded sample and the state of certain controls.</p>
+
+      <img src="user-guide/wave-display.png" alt="screenshot of the waveform display">
+
+      <ul>
+        <li>The shaded area is the window where grains will be played. A random start time for each grain is chosen within that window.</li>
+        <li>The dashed line on the right side of the window can be moved around using the <span class="pre-like">WINDOW</span> knob.</li>
+        <li>The solid vertical line on the left side of the window corresponds to the <span class="pre-like">PLAYHEAD</span>.</li>
+        <li>Both filters are shown as dotted lines and can be modified here or using the <span class="pre-like">FREQUENCY</span> knobs in the filters section.</li>
+        <li>The name of the sample is shown bottom right and can be swapped by clicking <span class="pre-like">PICK</span>.</li>
+        <li>To the right is a rough meter. It will become red when clipping is occurring.</li>
+        <li>The current grain count is always displayed bottom left.</li>
+        <li>The thin black lines within the window show a rough visualization of the current grains. It will not visualize more than 5 grains.</li>
+      </ul>
+
+      <h2 id="knobs">3. The Knobs</h2>
+
+      <h3>The Granular Controls</h3>
+      <img src="user-guide/wave-controls.png" alt="screenshot of the granular controls">
+
+      <ul>
+        <li>The <span class="pre-like">PLAYHEAD</span> knob moves the playhead left or right.</li>
+        <li>The <span class="pre-like">WINDOW</span> knob increases or decreases the size of the window.</li>
+        <li>The <span class="pre-like">DENSITY</span> knob increases or decreases the density of the grains. The unit is grains per second.</li>
+        <li>The <span class="pre-like">BACKWARD</span> knob controls the percentage of the grains that will be reversed before being played.</li>
+      </ul>
+
+      <h3>The Envelope Controls</h3>
+      <img src="user-guide/envelope-controls.png" alt="screenshot of the envelope controls">
+
+      <ul>
+        <li>The <span class="pre-like">ATTACK</span> knob controls how long each grain will take to reach full gain.</li>
+        <li>The <span class="pre-like">HOLD</span> knob controls how long the grain will remain at full gain.</li>
+        <li>The <span class="pre-like">RELEASE</span> knob controls how long the grain will take to come down from full gain.</li>
+        <li>At the top of the knobs is a rough visualization of the envelope. The visualization is linear but the envelope is made somewhat smooth.</li>
+      </ul>
+
+      <blockquote>
+        <div class="quote-content">“A profound law of signal processing comes into play in setting the grain duration: the shorter the duration of an event, the greater its bandwidth.”
+          <div class="quote-attribution">The Computer Music Tutorial, chapter 13</div>
+        </div>
+      </blockquote>
+
+      <h3>The Filter Controls</h3>
+      <img src="user-guide/filter-controls.png" alt="screenshot of the filter controls">
+
+      <p>These knobs control 2 filters: one high-pass (<span class="pre-like">HPF</span>) and one low-pass (<span class="pre-like">LPF</span>). The current location of the filters is also shown on the waveform display.</p>
+
+      <h3>The Effects Controls</h3>
+      <img src="user-guide/effects-controls.png" alt="screenshot of the effects controls">
+
+      <ul>
+        <li>The <span class="pre-like">DELAY TIME</span> knob controls the amount of time between echoes.</li>
+        <li>The <span class="pre-like">DELAY FEEDBACK</span> knob controls how many echoes will occur.</li>
+        <li>The <span class="pre-like">REVERB</span> knob controls how much of the audio chain will be sent to the reverb return track.</li>
+        <li>The <span class="pre-like">VOLUME</span> knob controls the volume of the entire side.</li>
+      </ul>
+
+      <h3>LFOs</h3>
+
+      <p>Bascule comes with 4 LFOs (low-frequency oscillators) that can be used to control any of the knobs.</p>
+
+      <img src="user-guide/lfo.png" class="thin" alt="screenshot of an LFO">
+
+      <ul>
+        <li>The dropdown at the top is used to select the shape of the LFO.</li>
+        <li>The <span class="pre-like">RATE</span> knob controls the rate of the LFO (how many times per second it will go through its shape).</li>
+        <li>The <span class="pre-like">DEPTH</span> knob controls how much the target knob will be affected by the LFO. The unit is a percentage of the full range of the target knob.</li>
+        <li>The <span class="pre-like">INVERT</span> checkbox can be used to change the phase of the LFO shape by 180 degrees.</li>
+        <li>The <span class="pre-like">PICK</span> button is used to select a target. Click <span class="pre-like">PICK</span> and then the knob that should become the target.</li>
+      </ul>
+
+      <h3>Using the Knobs</h3>
+
+      <p>Simply press or downclick and drag up to increase the value or down to decrease the value.</p>
+      <p>Holding <span class="pre-lile">SHIFT</span> while doing this will modify the value an order of magnitude faster.</p>
+      <p>When a knob is focused, the arrow keys can also be used to tweak the value.</p>
+      <p>Multiple knobs can be focused by pressing <span class="pre-lile">SHIFT</span> and clicking other knobs. When multiple knobs are focused, they can be modified all at the same time.</p>
+
+      <h2 id="exporting-audio">4. Exporting Audio</h2>
+
+      <p>At any time while Bascule is playing, you can click <span class="pre-like">Export</span> at the top right to download a webm rendering of the whole session. Subsequent downloads will start where the previous one left off.</p>
+
+      <h2 id="granular-synthesis">5. Granular Synthesis</h2>
+
+      <p>Granular synthesis happens when micro sounds are brought together to create a cloud of sounds. The micro sounds can be generated from oscillators or sampled. Bascule uses samples.</p>
+
+      <p>Each grain is basically a micro sample of the sample loaded into Bascule.</p>
+
+      <blockquote>
+        <div class="quote-content">“Granular synthesis is really where the gap between synthesis and sampling is finally closed.”<div class="quote-attribution">Creating Sounds from Scratch, p. 298</div>
+        </div>
+      </blockquote>
+
+      <p>Bascule includes many of the controls that one needs to do granular synthesis. Other synthesizers might also include:</p>
+
+      <ul>
+        <li>Modification of the grain envelope shape.</li>
+        <li>Modification of the playback rate.</li>
+        <li>Detuning or pitch quantization of each grain.</li>
+        <li>Playing grains via MIDI.</li>
+        <li>A custom function to trigger the grains. (Bascule simply spreads the grain across the next second.)</li>
+      </ul>
+
+      <p>Granular synthesis can also be used as an algorithm to time-stretch a sample. Or it can be used simply as part of an effects chain.</p>
+
+      <h3>Rhythm Versus Pitch</h3>
+
+      <p>The difference between rhythm and pitch is philosophical! This can be seen easily by:</p>
+
+      <ol>
+        <li>Keeping the envelope short (less than 50 ms total).</li>
+        <li>Setting the window size to 0 ms.</li>
+        <li>Setting the density to 1 grain per second.</li>
+        <li>Increasing the density grain by grain.</li>
+      </ol>
+
+      <p>At some point, around 20 grains per second, the beeping rhythm will transform into a pitch. This pitch can be tuned with higher density values.</p>
+
+      <h3>Smooth Textures</h3>
+
+      <p>Crackling textures and buzzing bees are a staple of granular synthesis but sometimes it’s nice to create a smooth texture. To do that, try the following:</p>
+
+      <ul>
+        <li>Increase the density to above 120.</li>
+        <li>Increase the attack to above 100 ms and zero out the hold phase. This will smooth out most transients that would have occurred during the attack phase.</li>
+        <li>Try playing grains backwards. This will convert transients into crescendos.</li>
+        <li>Increase the window size to around 1000 ms, depending on the sample. Selecting grains around the same region of the sample but not from the exact same place will average out some harshness.</li>
+        <li>Watch out for resonant frequencies and tame them with the 2 filters.</li>
+        <li>Use a slow LFO and target the playhead. This can give the texture pleasing variations.</li>
+        <li>Add delay and reverb! Of course.</li>
+      </ul>
+
+      <h2 id="ideas">6. Ideas</h2>
+
+      <h3>Bascule Back and Forth</h3>
+
+      <p>Attach a very slow LFO to the <span class="pre-like">MIX</span> knob and design the textures on each side to gel well together. Having one side with more high-end energy and the other with more low-end energy can be effective (filters can help). The ever-changing mix will provide good variation. Both sides can even use the same sample.</p>
+
+      <h3>Scrubbing</h3>
+
+      <p>The sample can be played more or less as is by keeping the window and density small and moving the playhead slowly to the right. Using a saw LFO to snap back to the beginning can be effective.</p>
+
+      <h3>2-bar Loop</h3>
+
+      <p>Keeping the density very low (e.g. 2 or 3) and targeting the playhead with a square LFO can create a pleasing 2-bar loop. The base position of the playhead is crucial. Adding delay and reverb will help this loop feel melancholic or lo-fi.</p>
+
+      <h3>4-bar Loop</h3>
+
+      <p>The 2-bar loop can be extended into a 4-bar loop by attaching another square LFO to the depth of the first one.</p>
+
+      <h3>Glitchy Percussions</h3>
+
+      <p>Use grains for their percussive potential:</p>
+
+      <ul>
+        <li>Make the window size about as long as the sample itself.</li>
+        <li>Keep the density low (e.g. 5 grains per second).</li>
+        <li>Lower the attack to a few milliseconds.</li>
+        <li>Zero out the hold phase.</li>
+        <li>Increase the release to more than 100 ms.</li>
+      </ul>
+
+      <p>Grains will be played from across the whole sample and will generate percussive events. Delay and reverb can make the glitchiness more coherent.</p>
+
+      <h3>Quick Tips</h3>
+
+      <ul>
+        <li>Removing some of the low end with the high-pass filter can remove a lot of resonant frequencies and make later mixing easier.</li>
+        <li>Use the filters! They are helpful to make the two sides of Bascule cohere. And attaching an LFO to the frequency knob of a low-pass filter is an easy way to get variation. Resonance can make it more or less obvious.</li>
+        <li>LFOs can target knobs on other LFOs.</li>
+        <li>Using <span class="pre-like">SHIFT</span> to select multiple knobs and modifying them all at once is a good way to create clear transitions.</li>
+        <li>Creative glitches can be created by (almost) zeroing out all the phases of the grain envelope.</li>
+        <li>Modulate the delay or the reverb for extreme spatial effects.</li>
+        <li>Use a smooth random LFO to vary the textures.</li>
+      </ul>
+
+      <h2 id="questions">7. Questions &amp; Comments</h2>
+
+      <p>Questions and comments can be directed to <a href="mailto:mxtxcstudios@gmail.com">mxtxcstudios@gmail.com</a>.</p>
+      <p>Or reach out to <a href="https://instagram.com/mxtxc_studios">@mxtxc_studios</a> on Instagram.</p>
+      <p>I would love to hear what you make with Bascule.</p>
+
+      <h2 id="also-see">8. Also See</h2>
+
+      <ul>
+        <li>The <a href="https://mitpress.mit.edu/9780262044912/the-computer-music-tutorial/">Computer Music Tutorial</a> book.</li>
+        <li>The <a href="https://global.oup.com/academic/product/creating-sounds-from-scratch-9780199921898?q=Creating%20Sounds%20from%20Scratch:%20A%20Practical%20Guide%20to%20Music%20Synthesis%20for%20Producers%20and%20Composers&cc=de&lang=en">Creating Sounds from Scratch</a> book.</li>
+        <li>The <a href="https://www.meldaproduction.com/MGranularMB">MGranularMB</a> plugin.</li>
+        <li>Arturia's <a href="https://www.arturia.com/products/software-instruments/pigments/overview">Pigments</a> has a great granular engine.</li>
+        <li>Sound Guru <a href="http://sound-guru.com/software/mangle/manual/">The Mangle's Manual</a>.</li>
+      </ul>
+
+    </article>
+  </body>
+</html>

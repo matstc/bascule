@@ -1,0 +1,47 @@
+synth-lfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 1rem;
+  border: 1px solid black;
+  padding: 1rem;
+}
+
+synth-lfo .other-parameter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+synth-lfo .other-parameter, synth-lfo synth-knob {
+  margin-bottom: 1rem;
+}
+
+synth-lfo .other-parameter .label {
+  text-transform: uppercase;
+  font-size: 70%;
+  color: #999;
+  margin-bottom: .5em;
+  text-wrap: nowrap;
+}
+
+synth-lfo button {
+  background: transparent;
+  border: 1px solid black;
+  cursor: pointer;
+}
+
+synth-lfo button:hover, synth-lfo button:focus {
+  background: #eee;
+}
+
+synth-lfo .target-display {
+  max-width: 68px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+synth-lfo select {
+  max-width: 70px;
+}

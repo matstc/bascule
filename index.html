@@ -1,0 +1,1117 @@
+<html lang="en">
+  <head>
+    <title>Bascule | Dual Granular Synthesizer</title>
+    <meta name="description" content="A dual granular synthesizer. Make sounds and textures with granular synthesis. A free musical instrument.">
+    <meta name="robots" content="index, follow">
+    <link rel="shortcut icon" type="image/png" href="favicon.png">
+    <script src="analyser.js"></script>
+    <script src="synth-lfo.js"></script>
+    <script src="synth-knob.js"></script>
+    <link rel="stylesheet" href="synth-knob.css">
+    <link rel="stylesheet" href="synth-lfo.css">
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: "Courier New", sans-serif;
+      }
+
+      html, body {
+        padding: 0;
+        margin: 0;
+      }
+
+      header.top-header {
+        padding: 2px 5px;
+        display: flex;
+        justify-content: space-between;
+        color: #999;
+      }
+
+      header.top-header button, header.top-header a {
+        text-decoration: underline;
+        cursor: pointer;
+        color: #999;
+      }
+
+      #start-button {
+        font-size: 500%;
+        cursor: pointer;
+        touch-action: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #start-button > * {
+        position: absolute;
+      }
+
+      #start-button img:hover {
+        filter: brightness(90%);
+      }
+
+      #start-button > .start-text {
+        pointer-events: none;
+      }
+
+      #start-button:hover {
+        background-color: #eee;
+      }
+
+      main {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        align-items: stretch;
+      }
+      
+      main .desk {
+        max-width: 512px;
+        width: 300px;
+        padding: 1rem;
+        display: none;
+        flex-direction: column;
+        flex: 1;
+        justify-content: space-between;
+      }
+
+      main .desk section:last-of-type {
+        margin-bottom: 0;
+      }
+
+      main .desk.loading .controls,
+      main .desk.loading .sample-pick-container,
+      main .desk.loading canvas,
+      main .desk.loading .meter,
+      main .desk.loading .window,
+      main .desk.loading .lpf-playhead,
+      main .desk.loading .hpf-playhead,
+      main .desk.loading .grain
+      {
+        opacity: 0.2;
+        pointer-events: none;
+      }
+
+      main .mix-knob {
+        display: none;
+        justify-content: center;
+      }
+
+      main .mix-knob synth-knob {
+        min-width: 120px;
+        margin-top: 15px;
+      }
+
+      .meter {
+        width: 10px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-self: stretch;
+        position: absolute;
+        right: 0;
+      }
+
+      .meter .meter-needle {
+        background: white;
+      }
+
+      .ahr-controls, .wave-controls, .filter-controls, .effects-controls {
+        display: flex;
+        justify-content: space-around;
+      }
+
+      section {
+        margin-bottom: 10px;
+      }
+
+      .wave-display {
+        border: 1px solid black;
+        position: relative;
+        display: flex;
+        height: 120px;
+        overflow: hidden;
+      }
+
+      .wave-display .grain-count {
+        font-size: 50%;
+        position: absolute;
+        left: 4px;
+        bottom: 2px;
+        overflow: hidden;
+        padding-top: 1px;
+        background: white;
+        opacity: 0.8;
+      }
+
+      .wave-display .sample-pick-container {
+        position: absolute;
+        right: 13px;
+        bottom: 3px;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 80%;
+      }
+
+      .wave-display .sample-pick-display {
+        font-size: 13.33px;
+        margin-right: 5px;
+        text-wrap: nowrap;
+        overflow: hidden;
+      } 
+
+      .wave-display .sample-pick-button {
+        background: none;
+        border: 1px solid black;
+        cursor: pointer;
+        touch-action: none;
+      }
+
+      .wave-display .grain {
+        position: absolute;
+        top: 50%;
+        border-top: 1px solid black;
+        transform: scaleX(0%);
+      }
+
+      .wave-display .grain.forward {
+        transform: scaleX(100%);
+        transform-origin: 0%;
+        transition-property: transform;
+        transition-duration: 1.2s;
+      }
+
+      .wave-display .grain.reversed {
+        transform: scaleX(100%);
+        transform-origin: 100%;
+        transition-property: transform;
+        transition-duration: 1.2s;
+      }
+
+      .loading-screen {
+        position: absolute;
+        padding: 1rem;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        background-color: white;
+        display: none;
+      }
+
+      main .desk.loading .loading-screen {
+        display: unset;
+      }
+
+      select {
+        background: none;
+        border: 1px solid black;
+      }
+
+      input {
+        filter: grayscale(1);
+      }
+
+      input[type=checkbox]:focus-visible,
+      input[type=checkbox]:focus,
+      select:focus-visible,
+      select:focus,
+      button:focus-visible,
+      button:focus {
+        outline: 1px solid black;
+      }
+      
+      .wave-display .window {
+        height: 100%;
+        background-color: black;
+        position: absolute;
+        left: 0;
+        border-left: 1px solid black;
+        border-right: 1px dashed black;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 2000;
+        cursor: pointer;
+        touch-action: none;
+      }
+
+      .wave-display .lpf-playhead,
+      .wave-display .hpf-playhead {
+        border-right: 1px dotted black;
+        height: 100%;
+        position: absolute;
+        z-index: 2500;
+        cursor: pointer;
+        touch-action: none;
+      }
+
+      .wave-display .lpf-playhead:before {
+        content: "LPF";
+        font-size: 50%;
+        color: black;
+        position: absolute;
+        right: 2px;
+        cursor: pointer;
+        touch-action: none;
+      }
+
+      .wave-display .hpf-playhead:after {
+        content: "HPF";
+        font-size: 50%;
+        color: black;
+        position: absolute;
+        left: 2px;
+        cursor: pointer;
+        touch-action: none;
+      }
+
+      .wave-display .lpf-playhead {
+        right: 0;
+      }
+
+      .wave-display .hpf-playhead {
+        left: 0;
+      }
+
+      .wave-display canvas {
+        width: 100%;
+        margin: 10px 0;
+      }
+
+      .ahr-display {
+        display: flex;
+      }
+
+      .ahr-display .phase {
+        height: 30px;
+      }
+
+      .attack-phase .line {
+        transform: rotate(-15deg);
+        transform-origin: 100% 0%;
+      }
+
+      .release-phase .line {
+        transform: rotate(15deg);
+        transform-origin: 0% 0%;
+      }
+
+      .phase .line {
+        border-top: 1px solid black;
+      }
+
+      .spectrum {
+        display: flex;
+        align-items: end;
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.1;
+      }
+
+      .spectrum--bar {
+        background: black;
+        flex: 1;
+      }
+
+      .lfos {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelector("#start-button").addEventListener("click", () => {
+          document.querySelector("#start-button").remove()
+          
+          const desks = document.querySelectorAll("main .desk")
+
+          for (let desk of desks) {
+            desk.style.display = "flex"
+            desk.classList.add("loading")
+
+            desk.addEventListener("bascule.ready", () => {
+              desk.classList.remove("loading")
+            })
+          }
+
+          const audioContext = new AudioContext()
+          const finalDestinationNode = audioContext.createGain()
+          finalDestinationNode.connect(audioContext.destination)
+
+          const desk1GainNode = audioContext.createGain()
+          desk1GainNode.gain.value = 0.5
+          desk1GainNode.connect(finalDestinationNode)
+          const desk2GainNode = audioContext.createGain()
+          desk1GainNode.gain.value = 0.5
+          desk2GainNode.connect(finalDestinationNode)
+
+          init(desks[0], "sample1.wav", audioContext, desk1GainNode)
+          init(desks[1], "sample2.wav", audioContext, desk2GainNode)
+
+          for (let lfo of document.querySelectorAll("synth-lfo")) { lfo.style.display = "flex" }
+
+          const mixKnob = document.createElement("synth-knob")
+          mixKnob.setAttribute("parameter", "mix")
+          mixKnob.setAttribute("value", 50)
+          mixKnob.setAttribute("min", 0)
+          mixKnob.setAttribute("max", 100)
+          mixKnob.setAttribute("unit", "ratio")
+          mixKnob.setAttribute("sticker-path", "bascule.png")
+          const mixKnobContainer = document.querySelector(".mix-knob")
+          mixKnobContainer.appendChild(mixKnob)
+          mixKnobContainer.style.display = "flex"
+          mixKnob.addEventListener("bascule.change", e => {
+            const mixValue = e.detail.newValue
+            desk1GainNode.gain.value = (100 - e.detail.newValue) / 100
+            desk2GainNode.gain.value = e.detail.newValue / 100
+            desks[0].style.opacity = desk1GainNode.gain.value + .5
+            desks[1].style.opacity = desk2GainNode.gain.value + .5
+          })
+
+          recordingStream = audioContext.createMediaStreamDestination()
+          limiter = audioContext.createDynamicsCompressor()
+          limiter.threshold.value = -5
+          limiter.knee.value = 0
+          limiter.ratio.value = 20
+          limiter.attack.value = 0
+          limiter.release.value = 0.3
+          finalDestinationNode.connect(limiter).connect(recordingStream)
+          wetRecorder = new MediaRecorder(recordingStream.stream, { mimeType: "audio/webm" })
+          wetRecorder.addEventListener("dataavailable", blob => {
+            const objectUrl  = URL.createObjectURL(blob.data)
+            const a = document.createElement("a")
+            a.href = objectUrl
+            a.download = `Bascule ${new Date().toISOString()}.webm`
+            a.textContent = "Download"
+            a.click()
+          })
+          wetRecorder.start()
+          const exportButton = document.querySelector("#export-button")
+          exportButton.addEventListener("click", () => {
+            wetRecorder.stop()
+            wetRecorder.start()
+          })
+          document.querySelector("header #export-button").style.display = ""
+
+          document.addEventListener("pointerdown", e => {
+            if (!e.target.matches(".knob")) {
+              document.dispatchEvent(new CustomEvent("bascule.knob.blurred"))
+            }
+          })
+        })
+      })
+
+      function init(desk, samplePath, audioContext, destinationNode) {
+        let sample
+        let reversedSample
+        let oddsOfReverse = 0
+        let period
+        let density = 10
+        let attack = 25
+        let hold = 10
+        let release = 25
+        let anchor = 0
+        let window = 1000
+        let gainNodes = []
+        let maxGain = 0.4
+        let analyzer
+        let meter
+        let meterNeedle
+        let volumeNode
+        let lpf
+        let lpfFrequency = 20000
+        let lpfResonance = 0
+        let hpf
+        let hpfFrequency = 0
+        let hpfResonance = 0
+        let delay
+        let delayTime = 0
+        let delayFeedback
+        let delayFeedbackValue = 0
+        let convolver
+        let reverbGain
+        let reverbGainValue = 0
+        let volume = 50
+        let loopingInterval = 1000
+        let lastLoopTime
+
+        volumeNode = audioContext.createGain()
+        volumeNode.gain.value = volume / 100
+        volumeNode.connect(destinationNode)
+        lpf = audioContext.createBiquadFilter()
+        lpf.type = "lowpass"
+        lpf.Q.value = lpfResonance
+        lpf.frequency.value = lpfFrequency
+        hpf = audioContext.createBiquadFilter()
+        hpf.type = "highpass"
+        hpf.Q.value = hpfResonance
+        hpf.frequency.value = hpfFrequency
+        lpf.connect(hpf)
+        hpf.connect(volumeNode)
+        delayFeedback = audioContext.createGain()
+        delayFeedback.gain.value = delayFeedbackValue / 100
+        delay = audioContext.createDelay(179)
+        delay.delayTime.value = delayTime / 1000
+        delay.connect(delayFeedback)
+        delayFeedback.connect(delay)
+        delay.connect(volumeNode)
+        hpf.connect(delayFeedback)
+
+        fetch("ir.wav").then(response => response.arrayBuffer()).then(arrayBuffer => {
+          audioContext.decodeAudioData(arrayBuffer, decoded => {
+            convolver = audioContext.createConvolver()
+            convolver.buffer = decoded
+            reverbGain = audioContext.createGain()
+            reverbGain.gain.value = reverbGainValue / 50
+            hpf.connect(convolver)
+            convolver.connect(reverbGain)
+            reverbGain.connect(volumeNode)
+          })
+        })
+
+        function cloneAudioBuffer(fromAudioBuffer) {
+          const audioBuffer = new AudioBuffer({
+            length: fromAudioBuffer.length,
+            numberOfChannels: fromAudioBuffer.numberOfChannels,
+            sampleRate: fromAudioBuffer.sampleRate
+          })
+
+          for(let n = 0; n < audioBuffer.numberOfChannels; n++) {
+            const samples = fromAudioBuffer.getChannelData(n)
+            audioBuffer.copyToChannel(samples, n)
+          }
+
+          return audioBuffer
+        }
+
+        function extractBuffers(url) {
+          const promise = new Promise((resolve) => {
+            const request = new XMLHttpRequest()
+            request.open("GET", url, true)
+            request.responseType = "arraybuffer"
+            request.onload = () => {
+              audioContext.decodeAudioData(request.response, (buffer) => {
+                const original = cloneAudioBuffer(buffer)
+
+                for (let n = 0; n < buffer.numberOfChannels; n++) {
+                  Array.prototype.reverse.call(buffer.getChannelData(n))
+                }
+                resolve([original, buffer])
+              })
+            }
+            request.send()
+          })
+
+          return promise
+        }
+
+        function drawGrain(startTime, duration, reversed) {
+          const grain = document.createElement("div")
+          grain.classList.add("grain")
+          const width = Math.max(2, duration / (sample.duration * 1000) * 100)
+          const left = startTime / (sample.duration * 1000) * 100
+          grain.style.left = `${reversed ? left - width : left}%`
+          grain.style.top = `${Math.random() * 20 + 40}%`
+          grain.style.width = `${width}%`
+          desk.querySelector(".wave-display").appendChild(grain)
+          
+          setTimeout(() => {
+            grain.classList.add(reversed ? "reversed" : "forward")
+          }, 50)
+
+          setTimeout(() => {
+            grain.remove()
+          }, Math.max(duration, 1200))
+        }
+
+        let sineInterpolationPrecision = 1000
+        let normalSinusoidalCurveValues = []; for (let i = 0; i < sineInterpolationPrecision; i++) { normalSinusoidalCurveValues.push((Math.sin(3 * Math.PI / 2 + Math.PI/sineInterpolationPrecision * i) + 1) / 2) }; normalSinusoidalCurveValues.push(1)
+
+        function calculateSinusoidalCurve(initial, end) {
+          return normalSinusoidalCurveValues.map(x => initial + (end - initial) * x)
+        }
+
+        function loop(now) {
+          if (lastLoopTime && (now - lastLoopTime) < 1000) { requestAnimationFrame(loop); return }
+
+          lastLoopTime = now
+          lpf.frequency.value = lpfFrequency
+          lpf.Q.value = lpfResonance
+          hpf.frequency.value = hpfFrequency
+          hpf.Q.value = hpfResonance
+          delayFeedback.gain.value = delayFeedbackValue / 100
+          delay.delayTime.value = delayTime / 1000
+          reverbGain.gain.value = reverbGainValue / 50
+          volumeNode.gain.value = volume / 100
+
+          for (let i = 0; i < density; i++) {
+            const source = new AudioBufferSourceNode(audioContext)
+            const reversed = (Math.random() * 100) < oddsOfReverse
+            source.buffer = reversed ? reversedSample : sample
+            const gainNode = audioContext.createGain()
+            gainNodes.push(gainNode)
+            
+            const startOffset = loopingInterval / density * i
+            const gainValue = parseFloat(maxGain, 10)
+            const grainDuration = attack + hold + release
+
+            gainNode.gain.value = 0
+            attackAndHoldTimeInSeconds = attack / 1000 + hold / 1000
+            currentTime = audioContext.currentTime
+            audioContextStartTimeInSeconds = currentTime + startOffset / 1000
+            gainNode.gain.setValueAtTime(0, audioContextStartTimeInSeconds)
+
+            if (attack) gainNode.gain.setValueCurveAtTime(calculateSinusoidalCurve(0, gainValue), audioContextStartTimeInSeconds, attack / 1000)
+            else gainNode.gain.linearRampToValueAtTime(gainValue, audioContextStartTimeInSeconds)
+
+            if (hold) gainNode.gain.setValueAtTime(gainValue, audioContextStartTimeInSeconds + attackAndHoldTimeInSeconds)
+
+            if (release) gainNode.gain.setValueCurveAtTime(calculateSinusoidalCurve(gainValue, 0), audioContextStartTimeInSeconds + attackAndHoldTimeInSeconds, release / 1000)
+            else gainNode.gain.linearRampToValueAtTime(0, audioContextStartTimeInSeconds + attackAndHoldTimeInSeconds + release / 1000)
+
+            source.connect(gainNode)
+            gainNode.connect(lpf)
+            const startTime = anchor / 1000 + Math.random() * window / 1000
+            const startingBlock = reversed ? source.buffer.duration - startTime : startTime
+            source.start(audioContextStartTimeInSeconds, startingBlock, grainDuration / 1000)
+
+            source.addEventListener("ended", () => {
+              const index = gainNodes.indexOf(gainNode)
+              gainNode.disconnect()
+              gainNodes.splice(index, 1)
+              desk.querySelector(".grain-count").textContent = gainNodes.length
+            })
+
+            desk.querySelector(".grain-count").textContent = gainNodes.length
+
+            if (i <= 5) {
+              setTimeout(() => {
+                drawGrain(startTime * 1000, grainDuration, reversed)
+              }, startOffset)
+            }
+          }
+
+          requestAnimationFrame(loop)
+        }
+
+        function addAnalyzer() {
+          analyzer = audioContext.createAnalyser()
+          volumeNode.connect(analyzer)
+          const sampleBuffer = new Float32Array(analyzer.fftSize)
+          let throttle = true
+
+          const analyzerLoop = () => {
+            throttle = !throttle
+
+            if (throttle) {
+              requestAnimationFrame(analyzerLoop)
+              return
+            }
+
+            analyzer.getFloatTimeDomainData(sampleBuffer)
+
+            let peakInstantaneousPower = 0
+
+            for (let i = 0; i < sampleBuffer.length; i++) {
+              const power = sampleBuffer[i] ** 2
+              peakInstantaneousPower = Math.max(power, peakInstantaneousPower)
+            }
+            const peakInstantaneousPowerDecibels = 10 * Math.log10(peakInstantaneousPower)
+
+            meterNeedle.style.height = peakInstantaneousPowerDecibels < -100 ? "0%" : `${(100 + peakInstantaneousPowerDecibels)}%`
+
+            if (peakInstantaneousPowerDecibels > -3) {
+              meterNeedle.style.background = "#F24423"
+            } else {
+              meterNeedle.style.background = "#999999"
+            }
+
+            requestAnimationFrame(analyzerLoop)
+          }
+          analyzerLoop()
+        }
+
+        function createMeter() {
+          meter = document.createElement("div")
+          meter.classList.add("meter")
+          meterNeedle = document.createElement("div")
+          meterNeedle.classList.add("meter-needle")
+          meter.appendChild(meterNeedle)
+          desk.querySelector(".wave-display").appendChild(meter)
+        }
+
+        createMeter()
+        addAnalyzer()
+
+        desk.addEventListener("bascule.change", e => {
+          console.debug(`${e.detail.parameter} changed to ${e.detail.newValue}`)
+          eval(`${e.detail.parameter} = ${e.detail.newValue}`)
+          
+          if ((anchor + window) > sample.duration * 1000) {
+            window = sample.duration * 1000 - anchor
+          }
+
+          if (e.detail.parameter === "anchor" || e.detail.parameter === "window") {
+            desk.querySelector(".window").style.left = `${anchor / sample.duration / 10}%`
+            desk.querySelector(".window").style.width = `${window / sample.duration / 10}%`
+          }
+
+          if (e.detail.parameter === "lpfFrequency") {
+            percentage = Math.max(0, 100 - Math.log2(20000 / lpfFrequency)  * 10)
+            desk.querySelector(".lpf-playhead").style.right = "unset"
+            desk.querySelector(".lpf-playhead").style.left = `${percentage}%`
+          }
+
+          if (e.detail.parameter === "hpfFrequency") {
+            percentage = Math.max(0, 100 - Math.log2(20000 / hpfFrequency)  * 10)
+            desk.querySelector(".hpf-playhead").style.left = `${percentage}%`
+          }
+
+          if (["attack", "hold", "release"].indexOf(e.detail.parameter) !== -1) {
+            drawAhr()
+          }
+        }, { capture: true })
+
+        const drawAhr = () => {
+          const grainDuration = attack + hold + release
+          desk.querySelector(".attack-phase").style.width = `${attack / grainDuration * 100}%`
+          const attackWidth = desk.querySelector(".attack-phase").getBoundingClientRect().width
+          const attackHeight = desk.querySelector(".attack-phase").getBoundingClientRect().height
+          const attackHypotenuse = Math.sqrt(Math.pow(attackWidth, 2) + Math.pow(attackHeight, 2))
+          const attackLineRotation = Math.asin(attackHeight / attackHypotenuse)
+          desk.querySelector(".attack-phase .line").style.transform = `rotate(-${attackLineRotation}rad)`
+          desk.querySelector(".hold-phase").style.width = `${hold / grainDuration * 100}%`
+          desk.querySelector(".release-phase").style.width = `${release / grainDuration * 100}%`
+          const releaseWidth = desk.querySelector(".release-phase").getBoundingClientRect().width
+          const releaseHeight = desk.querySelector(".release-phase").getBoundingClientRect().height
+          const releaseHypotenuse = Math.sqrt(Math.pow(releaseWidth, 2) + Math.pow(releaseHeight, 2))
+          const releaseLineRotation = Math.asin(releaseHeight / releaseHypotenuse)
+          desk.querySelector(".release-phase .line").style.transform = `rotate(${releaseLineRotation}rad)`
+        }
+
+        const filterData = (audioBuffer) => {
+          const rawData = audioBuffer.getChannelData(0)
+          const samples = 10000
+          const blockSize = Math.floor(rawData.length / samples)
+          const filteredData = []
+          for (let i = 0; i < samples; i++) {
+            let blockStart = blockSize * i
+            let sum = 0
+            for (let j = 0; j < blockSize; j++) {
+              sum = sum + Math.abs(rawData[blockStart + j])
+            }
+            filteredData.push(sum / blockSize)
+          }
+          return filteredData
+        }
+
+        const normalizeData = (data) => {
+          const multiplier = Math.pow(Math.max(...data), -1)
+          return data.map(n => n * multiplier)
+        }
+
+        const draw = (canvas, data) => {
+          const dpr = window.devicePixelRatio || 1
+          canvas.width = canvas.offsetWidth * dpr
+          canvas.height = (canvas.offsetHeight) * dpr
+          const ctx = canvas.getContext("2d")
+          ctx.scale(dpr, dpr)
+          ctx.translate(0, canvas.offsetHeight / 2)
+
+          const width = canvas.offsetWidth / data.length
+          for (let i = 0; i < data.length; i++) {
+            const x = width * i
+            let height = data[i] * canvas.offsetHeight
+            if (height < 0) {
+                height = 0
+            } else if (height > canvas.offsetHeight / 2) {
+                height = height > canvas.offsetHeight / 2
+            }
+            drawLineSegment(ctx, x, height, width)
+          }
+        }
+
+        const drawLineSegment = (ctx, x, y, width) => {
+          ctx.lineWidth = 1
+          ctx.strokeStyle = "#ccc"
+          ctx.beginPath()
+          ctx.moveTo(x, -y)
+          ctx.lineTo(x, y)
+          ctx.moveTo(x + width, 0)
+          ctx.stroke()
+        }
+
+        desk.querySelector(".sample-pick-button").addEventListener("click", (e) => {
+          const input = document.createElement("input")
+          input.type = "file"
+
+          input.onchange = e => {
+            desk.classList.add("loading")
+
+            const file = e.target.files[0]
+            const sampleName = file.name.replace(/.wav|.mp3/i, "")
+            desk.querySelector(".sample-pick-display").textContent = sampleName
+            const reader = new FileReader()
+            reader.readAsArrayBuffer(file)
+
+            reader.onload = (readerEvent) => {
+              const content = readerEvent.target.result
+              audioContext.decodeAudioData(content, (buffer) => {
+                const original = cloneAudioBuffer(buffer)
+
+                for (let n = 0; n < buffer.numberOfChannels; n++) {
+                  Array.prototype.reverse.call(buffer.getChannelData(n))
+                }
+
+                replaceSample(original, buffer)
+              })
+            }
+          }
+
+          input.click()
+        })
+
+        const anchorControl = document.createElement("synth-knob")
+        anchorControl.setAttribute("parameter", "anchor")
+        anchorControl.setAttribute("display-name", "playhead")
+        anchorControl.setAttribute("value", anchor)
+        anchorControl.setAttribute("unit", "ms")
+        anchorControl.setAttribute("min", 0)
+        desk.querySelector(".wave-controls").appendChild(anchorControl)
+
+        const windowControl = document.createElement("synth-knob")
+        windowControl.setAttribute("parameter", "window")
+        windowControl.setAttribute("value", window)
+        windowControl.setAttribute("unit", "ms")
+        windowControl.setAttribute("min", 0)
+        desk.querySelector(".wave-controls").appendChild(windowControl)
+        const onWindowMove = e => {
+          const totalWidth = desk.querySelector(".wave-display").getBoundingClientRect().width
+          const windowElement = desk.querySelector(".window")
+          const windowPercentage = windowElement.getBoundingClientRect().width / totalWidth * 100
+          const potentialPercentage = parseFloat(windowElement.style.left, 10) + (e.movementX / totalWidth * 100)
+          const finalPercentage = Math.max(0, Math.min(potentialPercentage, 100 - windowPercentage))
+          anchor = finalPercentage / 100 * sample.duration * 1000
+          desk.querySelector("synth-knob[parameter=anchor]").setValue(anchor)
+          windowElement.style.left = `${finalPercentage}%`
+        }
+        desk.querySelector(".window").addEventListener("pointerdown", e => {
+          document.body.addEventListener("pointermove", onWindowMove, { capture: true })
+
+          const onUp = e => {
+            if (e.type === "pointerup" || e.target.matches("body")) {
+              document.body.removeEventListener("pointermove", onWindowMove, { capture: true })
+              document.body.removeEventListener("pointerup", onUp)
+              document.body.removeEventListener("pointerleave", onUp)
+            }
+          }
+          document.body.addEventListener("pointerup", onUp, { capture: true })
+          document.body.addEventListener("pointerleave", onUp, { capture: true })
+        })
+
+        const densityControl = document.createElement("synth-knob")
+        densityControl.setAttribute("parameter", "density")
+        densityControl.setAttribute("value", density)
+        densityControl.setAttribute("min", 0)
+        densityControl.setAttribute("max", 1000)
+        desk.querySelector(".wave-controls").appendChild(densityControl)
+
+        const oddsOfReverseControl = document.createElement("synth-knob")
+        oddsOfReverseControl.setAttribute("parameter", "oddsOfReverse")
+        oddsOfReverseControl.setAttribute("display-name", "Backward")
+        oddsOfReverseControl.setAttribute("value", oddsOfReverse)
+        oddsOfReverseControl.setAttribute("unit", "%")
+        oddsOfReverseControl.setAttribute("min", 0)
+        oddsOfReverseControl.setAttribute("max", 100)
+        desk.querySelector(".wave-controls").appendChild(oddsOfReverseControl)
+
+        const attackControl = document.createElement("synth-knob")
+        attackControl.setAttribute("parameter", "attack")
+        attackControl.setAttribute("value", attack)
+        attackControl.setAttribute("unit", "ms")
+        attackControl.setAttribute("min", 0)
+        desk.querySelector(".ahr-controls").appendChild(attackControl)
+
+        const holdControl = document.createElement("synth-knob")
+        holdControl.setAttribute("parameter", "hold")
+        holdControl.setAttribute("value", hold)
+        holdControl.setAttribute("unit", "ms")
+        holdControl.setAttribute("min", 0)
+        desk.querySelector(".ahr-controls").appendChild(holdControl)
+
+        const releaseControl = document.createElement("synth-knob")
+        releaseControl.setAttribute("parameter", "release")
+        releaseControl.setAttribute("value", release)
+        releaseControl.setAttribute("unit", "ms")
+        releaseControl.setAttribute("min", 0)
+        desk.querySelector(".ahr-controls").appendChild(releaseControl)
+
+        const hpfFrequencyControl = document.createElement("synth-knob")
+        hpfFrequencyControl.setAttribute("parameter", "hpfFrequency")
+        hpfFrequencyControl.setAttribute("display-name", "HPF Frequency")
+        hpfFrequencyControl.setAttribute("value", hpfFrequency)
+        hpfFrequencyControl.setAttribute("unit", "Hz")
+        hpfFrequencyControl.setAttribute("min", 0)
+        hpfFrequencyControl.setAttribute("max", 20000)
+        desk.querySelector(".filter-controls").appendChild(hpfFrequencyControl)
+
+        const hpfElement = desk.querySelector(".hpf-playhead")
+
+        const onHpfMove = e => {
+          e.preventDefault()
+          const totalWidth = desk.querySelector(".wave-display").getBoundingClientRect().width
+          const percentage = parseFloat(hpfElement.style.left || 0, 10) + (e.movementX / totalWidth * 100)
+          const finalPercentage = Math.max(0, Math.min(percentage, 100))
+          hpfFrequency = finalPercentage === 0 ? 0 : 20000 / Math.exp((1 - finalPercentage / 100) * 10 * Math.log(2))
+          desk.querySelector("synth-knob[parameter=hpfFrequency]").setValue(hpfFrequency)
+          hpfElement.style.left = `${finalPercentage}%`
+        }
+
+        hpfElement.addEventListener("pointerdown", e => {
+          document.body.addEventListener("pointermove", onHpfMove, { capture: true })
+
+          const onUp = e => {
+            if (e.type === "pointerup" || e.target.matches("body")) {
+              document.body.removeEventListener("pointermove", onHpfMove, { capture: true })
+              document.body.removeEventListener("pointerup", onUp)
+              document.body.removeEventListener("pointerleave", onUp)
+            }
+          }
+          document.body.addEventListener("pointerup", onUp, { capture: true })
+          document.body.addEventListener("pointerleave", onUp, { capture: true })
+        })
+
+        const hpfFrequencyResonanceControl = document.createElement("synth-knob")
+        hpfFrequencyResonanceControl.setAttribute("parameter", "hpfResonance")
+        hpfFrequencyResonanceControl.setAttribute("display-name", "HPF Resonance")
+        hpfFrequencyResonanceControl.setAttribute("value", hpfResonance)
+        hpfFrequencyResonanceControl.setAttribute("unit", "%")
+        hpfFrequencyResonanceControl.setAttribute("min", 0)
+        hpfFrequencyResonanceControl.setAttribute("max", 100)
+        desk.querySelector(".filter-controls").appendChild(hpfFrequencyResonanceControl)
+
+        const lpfFrequencyControl = document.createElement("synth-knob")
+        lpfFrequencyControl.setAttribute("parameter", "lpfFrequency")
+        lpfFrequencyControl.setAttribute("display-name", "LPF Frequency")
+        lpfFrequencyControl.setAttribute("value", lpfFrequency)
+        lpfFrequencyControl.setAttribute("unit", "Hz")
+        lpfFrequencyControl.setAttribute("min", 0)
+        lpfFrequencyControl.setAttribute("max", 20000)
+        desk.querySelector(".filter-controls").appendChild(lpfFrequencyControl)
+        const lpfElement = desk.querySelector(".lpf-playhead")
+
+        const onLpfMove = e => {
+          e.preventDefault()
+          const totalWidth = desk.querySelector(".wave-display").getBoundingClientRect().width - 3
+          const left = document.defaultView.getComputedStyle(lpfElement, "").getPropertyValue("left")
+          const parsedLeft = parseFloat(left || totalWidth, 10)
+          const percentage = (parsedLeft + e.movementX) / totalWidth * 100
+          const finalPercentage = Math.max(0, Math.min(percentage, 100))
+          lpfFrequency = finalPercentage === 0 ? 0 : 20000 / Math.exp((1 - finalPercentage / 100) * 10 * Math.log(2))
+          desk.querySelector("synth-knob[parameter=lpfFrequency]").setValue(lpfFrequency)
+          lpfElement.style.right = "unset"
+          lpfElement.style.left = `${Math.min(totalWidth, Math.max(0, parsedLeft + e.movementX))}px`
+        }
+
+        lpfElement.addEventListener("pointerdown", e => {
+          document.body.addEventListener("pointermove", onLpfMove, { capture: true })
+
+          const onUp = e => {
+            if (e.type === "pointerup" || e.target.matches("body")) {
+              document.body.removeEventListener("pointermove", onLpfMove, { capture: true })
+              document.body.removeEventListener("pointerup", onUp)
+              document.body.removeEventListener("pointerleave", onUp)
+            }
+          }
+          document.body.addEventListener("pointerup", onUp, { capture: true })
+          document.body.addEventListener("pointerleave", onUp, { capture: true })
+        })
+
+        const lpfFrequencyResonanceControl = document.createElement("synth-knob")
+        lpfFrequencyResonanceControl.setAttribute("parameter", "lpfResonance")
+        lpfFrequencyResonanceControl.setAttribute("display-name", "LPF Resonance")
+        lpfFrequencyResonanceControl.setAttribute("value", lpfResonance)
+        lpfFrequencyResonanceControl.setAttribute("unit", "%")
+        lpfFrequencyResonanceControl.setAttribute("min", 0)
+        lpfFrequencyResonanceControl.setAttribute("max", 100)
+        desk.querySelector(".filter-controls").appendChild(lpfFrequencyResonanceControl)
+
+        const delayTimeControl = document.createElement("synth-knob")
+        delayTimeControl.setAttribute("parameter", "delayTime")
+        delayTimeControl.setAttribute("display-name", "Delay Time")
+        delayTimeControl.setAttribute("value", delayTime)
+        delayTimeControl.setAttribute("unit", "ms")
+        delayTimeControl.setAttribute("min", 0)
+        delayTimeControl.setAttribute("max", 10000)
+        desk.querySelector(".effects-controls").appendChild(delayTimeControl)
+
+        const delayFeedbackValueControl = document.createElement("synth-knob")
+        delayFeedbackValueControl.setAttribute("parameter", "delayFeedbackValue")
+        delayFeedbackValueControl.setAttribute("display-name", "Delay Feedback")
+        delayFeedbackValueControl.setAttribute("value", delayFeedbackValue)
+        delayFeedbackValueControl.setAttribute("unit", "%")
+        delayFeedbackValueControl.setAttribute("min", 0)
+        delayFeedbackValueControl.setAttribute("max", 100)
+        desk.querySelector(".effects-controls").appendChild(delayFeedbackValueControl)
+
+        const reverbGainValueControl = document.createElement("synth-knob")
+        reverbGainValueControl.setAttribute("parameter", "reverbGainValue")
+        reverbGainValueControl.setAttribute("display-name", "Reverb")
+        reverbGainValueControl.setAttribute("value", reverbGainValue)
+        reverbGainValueControl.setAttribute("unit", "%")
+        reverbGainValueControl.setAttribute("min", 0)
+        reverbGainValueControl.setAttribute("max", 100)
+        desk.querySelector(".effects-controls").appendChild(reverbGainValueControl)
+
+        const volumeControl = document.createElement("synth-knob")
+        volumeControl.setAttribute("parameter", "volume")
+        volumeControl.setAttribute("value", volume)
+        volumeControl.setAttribute("unit", "%")
+        volumeControl.setAttribute("min", 0)
+        volumeControl.setAttribute("max", 100)
+        desk.querySelector(".effects-controls").appendChild(volumeControl)
+
+        drawAhr()
+        
+        const analyser = new Analyser(audioContext, desk.querySelector(".wave-display"))
+        
+        volumeNode.connect(analyser.analyser)
+        analyser.visualize()
+
+        const replaceSample = (_sample, _reversedSample) => {
+          sample = _sample
+          reversedSample = _reversedSample
+          draw(desk.querySelector(".wave-display canvas"), normalizeData(filterData(sample)))
+
+          anchorControl.max = sample.duration * 1000
+          anchorControl.setValue(sample.duration * 1000 * 0.3)
+          desk.querySelector(".window").style.left = `${anchor / sample.duration / 10}%`
+
+          windowControl.max = sample.duration * 1000
+          windowControl.setValue(sample.duration * 1000 > 1000 ? 1000 : sample.duration * 1000 * 0.5)
+          desk.querySelector(".window").style.width = `${window / sample.duration / 10}%`
+
+          requestAnimationFrame(loop)
+          desk.dispatchEvent(new CustomEvent("bascule.ready"))
+        }
+  
+        extractBuffers(samplePath).then(buffers => replaceSample(buffers[0], buffers[1]))
+      }
+    </script>
+
+    <header class="top-header">
+      <div class="name">BASCULE | DUAL GRANULAR SYNTHESIZER</div>
+      <div class="actions">
+        <a href="User Guide.html" target="_blank">User Guide</a>
+        <a id="export-button" style="display: none">Export</a>
+      </div>
+    </header>
+
+    <div id="start-button" class="hero">
+      <img src="waveform.png">
+      <div class="start-text">START</div>
+    </div>
+
+    <main>
+      <div class="lfos">
+        <synth-lfo style="display: none"></synth-lfo>
+        <synth-lfo style="display: none"></synth-lfo>
+      </div>
+
+      <div class="desk">
+        <section>
+          <section class="wave-display">
+            <div class="loading-screen">Loading…</div>
+            <div class="window"></div>
+            <div class="hpf-playhead"></div>
+            <canvas></canvas>
+            <div class="lpf-playhead"></div>
+            <div class="grain-count">0</div>
+            <div class="sample-pick-container">
+              <div class="sample-pick-display">piano lullaby</div>
+              <button class="sample-pick-button">PICK</button>
+            </div>
+          </section>
+          <section class="wave-controls controls">
+          </section>
+        </section>
+        <section class="controls">
+          <section class="ahr-display">
+            <div class="phase attack-phase"><div class="line"></div></div>
+            <div class="phase hold-phase"><div class="line"></div></div>
+            <div class="phase release-phase"><div class="line"></div></div>
+          </section>
+          <section class="ahr-controls">
+          </section>
+        </section>
+        <section class="controls">
+          <section class="filter-display">
+          </section>
+          <section class="filter-controls">
+          </section>
+        </section>
+        <section class="controls">
+          <section class="effects-controls">
+          </section>
+        </section>
+      </div>
+
+      <div class="mix-knob"></div>
+
+      <div class="desk">
+        <section>
+          <section class="wave-display">
+            <div class="loading-screen">Loading…</div>
+            <div class="hpf-playhead"></div>
+            <div class="window"></div>
+            <div class="lpf-playhead"></div>
+            <canvas></canvas>
+            <div class="grain-count">0</div>
+            <div class="sample-pick-container">
+              <div class="sample-pick-display">mini rocket</div>
+              <button class="sample-pick-button">PICK</button>
+            </div>
+          </section>
+          <section class="wave-controls controls">
+          </section>
+        </section>
+        <section class="controls">
+          <section class="ahr-display">
+            <div class="phase attack-phase"><div class="line"></div></div>
+            <div class="phase hold-phase"><div class="line"></div></div>
+            <div class="phase release-phase"><div class="line"></div></div>
+          </section>
+          <section class="ahr-controls">
+          </section>
+        </section>
+        <section class="controls">
+          <section class="filter-display">
+          </section>
+          <section class="filter-controls">
+          </section>
+        </section>
+        <section class="controls">
+          <section class="effects-controls">
+          </section>
+        </section>
+      </div>
+
+      <div class="lfos">
+        <synth-lfo style="display: none"></synth-lfo>
+        <synth-lfo style="display: none"></synth-lfo>
+      </div>
+    </main>
+  </body>
+</html>
