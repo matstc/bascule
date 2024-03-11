@@ -104,7 +104,7 @@ class SynthKnob extends HTMLElement {
     })
 
     this.knob.addEventListener("pointerup", e => {
-      if (new Date().getTime() - this.lastPointerDownTime > 100) return // return if user is dragging
+      if (!this.lastPointerDownTime || (new Date().getTime() - this.lastPointerDownTime) > 100) return // return if user is dragging
 
       if (this.knob.matches(".focused")) {
         this.knob.classList.remove("focused")
