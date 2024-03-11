@@ -11,6 +11,7 @@ class SynthKnob extends HTMLElement {
   decimalPlaces
   knob
   baseValue
+  lastPointerDownTime
 
   connectedCallback() {
     this.parameter = this.attributes["parameter"].value
@@ -43,7 +44,9 @@ class SynthKnob extends HTMLElement {
     this.knob = document.createElement("div")
     this.knob.classList.add("knob")
     const notch = document.createElement("div")
+    notch.style.pointerEvents = "none"
     const baseNotch = document.createElement("div")
+    baseNotch.style.pointerEvents = "none"
 
     if (this.stickerPath) {
       notch.style.display = "flex"
@@ -67,13 +70,19 @@ class SynthKnob extends HTMLElement {
     this.knob.appendChild(notch)
     this.knob.appendChild(baseNotch)
 
-    this.knob.addEventListener("pointerdown", (e) => {
+    document.addEventListener("pointerdown", (e) => {
+      if (e.target !== this.knob && !this.knob.matches(".focused")) return
+      this.lastPointerDownTime = new Date().getTime()
+
+      if (!this.knob.matches(".focused")) {
+        document.dispatchEvent(new CustomEvent("bascule.knob.focused", { detail: { shiftKey: e.shiftKey, target: this.knob }}))
+      }
+
       e.preventDefault()
       this.dispatchEvent(new CustomEvent("bascule.pointerdown"))
 
       this.knob.classList.add("rotating")
       const onMove = (e) => {
-        e.stopPropagation()
         this.setValue(this.computeNewValue(e, -e.movementY))
       }
 
@@ -94,6 +103,8 @@ class SynthKnob extends HTMLElement {
     })
 
     this.knob.addEventListener("pointerup", e => {
+      if (new Date().getTime() - this.lastPointerDownTime > 100) return // return if user is dragging
+
       if (this.knob.matches(".focused")) {
         this.knob.classList.remove("focused")
       } else {
@@ -103,13 +114,13 @@ class SynthKnob extends HTMLElement {
     })
 
     document.addEventListener("bascule.knob.focused", e => {
-      if (e.detail.target !== this.knob && !e.detail.shiftKey) {
+      if (e.detail.target !== this.knob && !e.detail.shiftKey && this.knob.matches(".focused")) {
         this.knob.classList.remove("focused")
       }
     })
 
     document.addEventListener("bascule.knob.blurred", e => {
-      this.knob.classList.remove("focused")
+        this.knob.classList.remove("focused")
     })
 
     document.addEventListener("keydown", e => {
