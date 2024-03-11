@@ -70,19 +70,20 @@ class SynthKnob extends HTMLElement {
     this.knob.appendChild(notch)
     this.knob.appendChild(baseNotch)
 
-    document.addEventListener("pointerdown", (e) => {
-      if (e.target !== this.knob && !this.knob.matches(".focused")) return
+    this.knob.addEventListener("pointerdown", (e) => {
+      e.preventDefault()
       this.lastPointerDownTime = new Date().getTime()
 
       if (!this.knob.matches(".focused")) {
         document.dispatchEvent(new CustomEvent("bascule.knob.focused", { detail: { shiftKey: e.shiftKey, target: this.knob }}))
       }
 
-      e.preventDefault()
       this.dispatchEvent(new CustomEvent("bascule.pointerdown"))
 
       this.knob.classList.add("rotating")
+
       const onMove = (e) => {
+        document.dispatchEvent(new CustomEvent("bascule.knob.dragging", { detail: { event: e }}))
         this.setValue(this.computeNewValue(e, -e.movementY))
       }
 
@@ -114,8 +115,14 @@ class SynthKnob extends HTMLElement {
     })
 
     document.addEventListener("bascule.knob.focused", e => {
-      if (e.detail.target !== this.knob && !e.detail.shiftKey && this.knob.matches(".focused")) {
+      if (e.detail.target !== this.knob && !e.detail.shiftKey) {
         this.knob.classList.remove("focused")
+      }
+    })
+
+    document.addEventListener("bascule.knob.dragging", e => {
+      if (this.knob.matches(".focused")) {
+        this.setValue(this.computeNewValue(e.detail.event, -e.detail.event.movementY))
       }
     })
 
