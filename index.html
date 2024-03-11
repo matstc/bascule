@@ -760,23 +760,31 @@
           input.onchange = e => {
             desk.classList.add("loading")
 
-            const file = e.target.files[0]
-            const sampleName = file.name.replace(/.wav|.mp3/i, "")
-            desk.querySelector(".sample-pick-display").textContent = sampleName
-            const reader = new FileReader()
-            reader.readAsArrayBuffer(file)
+            try {
+              const file = e.target.files[0]
+              const reader = new FileReader()
+              reader.readAsArrayBuffer(file)
 
-            reader.onload = (readerEvent) => {
-              const content = readerEvent.target.result
-              audioContext.decodeAudioData(content, (buffer) => {
-                const original = cloneAudioBuffer(buffer)
+              reader.onload = (readerEvent) => {
+                const content = readerEvent.target.result
+                audioContext.decodeAudioData(content, (buffer) => {
+                  const original = cloneAudioBuffer(buffer)
 
-                for (let n = 0; n < buffer.numberOfChannels; n++) {
-                  Array.prototype.reverse.call(buffer.getChannelData(n))
-                }
+                  for (let n = 0; n < buffer.numberOfChannels; n++) {
+                    Array.prototype.reverse.call(buffer.getChannelData(n))
+                  }
 
-                replaceSample(original, buffer)
-              })
+                  replaceSample(original, buffer)
+                  const sampleName = file.name.replace(/.wav|.mp3/i, "")
+                  desk.querySelector(".sample-pick-display").textContent = sampleName
+                }, e => {
+                  alert(`There was an error processing this sample: ${e}`)
+                  desk.classList.remove("loading")
+                })
+              }
+            } catch (e) {
+              alert(`There was an error processing this sample: ${e}`)
+              desk.classList.remove("loading")
             }
           }
 
