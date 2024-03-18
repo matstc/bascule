@@ -1,5 +1,5 @@
 class SynthLfo extends HTMLElement {
-  rate = 0.5
+  rate = 0.25
   target
   depth = 10
   baseValue
