@@ -12,6 +12,7 @@ class SynthKnob extends HTMLElement {
   knob
   baseValue
   lastPointerDownTime
+  lastPointerMoveTime
 
   connectedCallback() {
     this.parameter = this.attributes["parameter"].value
@@ -83,6 +84,7 @@ class SynthKnob extends HTMLElement {
       this.knob.classList.add("rotating")
 
       const onMove = (e) => {
+        this.lastPointerMoveTime = new Date().getTime()
         document.dispatchEvent(new CustomEvent("bascule.knob.dragging", { detail: { event: e }}))
         this.setValue(this.computeNewValue(e, -e.movementY))
       }
@@ -104,7 +106,7 @@ class SynthKnob extends HTMLElement {
     })
 
     this.knob.addEventListener("pointerup", e => {
-      if (!this.lastPointerDownTime || (new Date().getTime() - this.lastPointerDownTime) > 100) return // return if user is dragging
+      if (this.lastPointerMoveTime && this.lastPointerMoveTime > this.lastPointerDownTime) return // return if user is dragging
 
       if (this.knob.matches(".focused")) {
         this.knob.classList.remove("focused")

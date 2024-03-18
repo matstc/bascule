@@ -816,6 +816,7 @@
           windowElement.style.left = `${finalPercentage}%`
         }
         desk.querySelector(".window").addEventListener("pointerdown", e => {
+          e.preventDefault()
           document.body.addEventListener("pointermove", onWindowMove, { capture: true })
 
           const onUp = e => {

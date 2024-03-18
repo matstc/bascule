@@ -80,7 +80,7 @@ class SynthLfo extends HTMLElement {
     const synthKnob = document.createElement("synth-knob")
     synthKnob.setAttribute("parameter", "rate")
     synthKnob.setAttribute("value", this.rate)
-    synthKnob.setAttribute("min", 0.01)
+    synthKnob.setAttribute("min", 0.001)
     synthKnob.setAttribute("max", 100)
     synthKnob.setAttribute("unit", "Hz")
     synthKnob.setAttribute("decimal-places", 3)
