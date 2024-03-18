@@ -107,8 +107,23 @@ class SynthLfo extends HTMLElement {
 
     const button = document.createElement("button")
     button.textContent = "PICK"
+
+    const onPointerDown = () => { this.userDragging = true }
+    const onPointerUp = () => { this.userDragging = false }
+    const onBasculeChange = e => {
+      if (e.detail?.triggeredBy === "lfo") return
+
+      this.startTime = new Date().getTime() % 500
+      this.baseValue = e.detail.newValue
+      this.randomTarget = null
+      this.lastRandomTarget = null
+    }
+
     button.addEventListener("click", () => {
       if (button.textContent === "CLEAR") {
+        this.target.removeEventListener("bascule.pointerdown", onPointerDown)
+        this.target.removeEventListener("bascule.pointerup", onPointerUp)
+        this.target.removeEventListener("bascule.change", onBasculeChange)
         this.target = null
         targetDisplay.textContent = "None"
         button.textContent = "PICK"
@@ -125,26 +140,13 @@ class SynthLfo extends HTMLElement {
             button.textContent = "CLEAR"
             this.baseValue = synthKnob.value
 
-            synthKnob.addEventListener("bascule.pointerdown", () => {
-              this.userDragging = true
-            })
-
-            synthKnob.addEventListener("bascule.pointerup", () => {
-              this.userDragging = false
-            })
-
-            synthKnob.addEventListener("bascule.change", e => {
-              if (e.detail?.triggeredBy === "lfo") return
-
-              this.startTime = new Date().getTime() % 500
-              this.baseValue = e.detail.newValue
-              this.randomTarget = null
-              this.lastRandomTarget = null
-            })
+            synthKnob.addEventListener("bascule.pointerdown", onPointerDown)
+            synthKnob.addEventListener("bascule.pointerup", onPointerUp)
+            synthKnob.addEventListener("bascule.change", onBasculeChange)
 
             this.go()
           }
-        }, { capture:true, once: true })
+        }, { capture: true, once: true })
       }
     })
     container.appendChild(button)
