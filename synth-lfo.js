@@ -176,7 +176,7 @@ class SynthLfo extends HTMLElement {
 
     elapsed = (currentTick - this.startTime) % rateInMs
 
-    const range = (parseFloat(this.target.max || 100, 10) - parseFloat(this.target.min || 0, 10)) * this.depth / 100
+    const range = (parseFloat(this.target.max || 360, 10) - parseFloat(this.target.min || 0, 10)) * this.depth / 100
     let diff = 0
 
     if (this.shape === "Sine") {
