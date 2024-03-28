@@ -446,6 +446,7 @@
         let volume = 50
         let loopingInterval = 1000
         let lastLoopTime
+        const scheduledFunctions = [] // tuples where index 0 is the function and index 1 is the scheduled time
 
         volumeNode = audioContext.createGain()
         volumeNode.gain.value = volume / 100
@@ -480,6 +481,27 @@
             reverbGain.connect(volumeNode)
           })
         })
+
+        function schedulingLoop() {
+          const now = new Date().getTime()
+
+          for (let fn of scheduledFunctions) {
+            if (fn[1] <= now) {
+              try {
+                fn[0]()
+              } catch(e) {
+                console.error(e)
+              }
+              scheduledFunctions.splice(scheduledFunctions.indexOf(fn), 1)
+            } else {
+              break
+            }
+          }
+
+          requestAnimationFrame(schedulingLoop)
+        }
+
+        requestAnimationFrame(schedulingLoop)
 
         function cloneAudioBuffer(fromAudioBuffer) {
           const audioBuffer = new AudioBuffer({
@@ -536,25 +558,18 @@
           }, Math.max(duration, 1200))
         }
 
-        let sineInterpolationPrecision = 1000
-        let normalSinusoidalCurveValues = []; for (let i = 0; i < sineInterpolationPrecision; i++) { normalSinusoidalCurveValues.push((Math.sin(3 * Math.PI / 2 + Math.PI/sineInterpolationPrecision * i) + 1) / 2) }; normalSinusoidalCurveValues.push(1)
-
         function calculateSinusoidalCurve(initial, end) {
+          const sineInterpolationPrecision = 1000
+          const normalSinusoidalCurveValues = []; for (let i = 0; i < sineInterpolationPrecision; i++) { normalSinusoidalCurveValues.push((Math.sin(3 * Math.PI / 2 + Math.PI/sineInterpolationPrecision * i) + 1) / 2) }; normalSinusoidalCurveValues.push(1)
           return normalSinusoidalCurveValues.map(x => initial + (end - initial) * x)
         }
 
+        const attackCurve = calculateSinusoidalCurve(0, maxGain)
+        const releaseCurve = calculateSinusoidalCurve(maxGain, 0)
+
         function loop(now) {
           if (lastLoopTime && (now - lastLoopTime) < 1000) { requestAnimationFrame(loop); return }
-
           lastLoopTime = now
-          lpf.frequency.value = lpfFrequency
-          lpf.Q.value = lpfResonance
-          hpf.frequency.value = hpfFrequency
-          hpf.Q.value = hpfResonance
-          delayFeedback.gain.value = delayFeedbackValue / 100
-          delay.delayTime.value = delayTime / 1000
-          reverbGain.gain.value = reverbGainValue / 50
-          volumeNode.gain.value = volume / 100
 
           for (let i = 0; i < density; i++) {
             const source = new AudioBufferSourceNode(audioContext)
@@ -563,44 +578,49 @@
             const gainNode = audioContext.createGain()
             gainNodes.push(gainNode)
             
-            const startOffset = loopingInterval / density * i
-            const gainValue = parseFloat(maxGain, 10)
-            const grainDuration = attack + hold + release
-
             gainNode.gain.value = 0
-            attackAndHoldTimeInSeconds = attack / 1000 + hold / 1000
-            currentTime = audioContext.currentTime
-            audioContextStartTimeInSeconds = currentTime + startOffset / 1000
-            gainNode.gain.setValueAtTime(0, audioContextStartTimeInSeconds)
-
-            if (attack) gainNode.gain.setValueCurveAtTime(calculateSinusoidalCurve(0, gainValue), audioContextStartTimeInSeconds, attack / 1000)
-            else gainNode.gain.linearRampToValueAtTime(gainValue, audioContextStartTimeInSeconds)
-
-            if (hold) gainNode.gain.setValueAtTime(gainValue, audioContextStartTimeInSeconds + attackAndHoldTimeInSeconds)
-
-            if (release) gainNode.gain.setValueCurveAtTime(calculateSinusoidalCurve(gainValue, 0), audioContextStartTimeInSeconds + attackAndHoldTimeInSeconds, release / 1000)
-            else gainNode.gain.linearRampToValueAtTime(0, audioContextStartTimeInSeconds + attackAndHoldTimeInSeconds + release / 1000)
-
             source.connect(gainNode)
             gainNode.connect(lpf)
-            const startTime = anchor / 1000 + Math.random() * window / 1000
-            const startingBlock = reversed ? source.buffer.duration - startTime : startTime
-            source.start(audioContextStartTimeInSeconds, startingBlock, grainDuration / 1000)
 
-            source.addEventListener("ended", () => {
-              const index = gainNodes.indexOf(gainNode)
-              gainNode.disconnect()
-              gainNodes.splice(index, 1)
+            const fn = () => {
+              lpf.frequency.value = lpfFrequency
+              lpf.Q.value = lpfResonance
+              hpf.frequency.value = hpfFrequency
+              hpf.Q.value = hpfResonance
+              delayFeedback.gain.value = delayFeedbackValue / 100
+              delay.delayTime.value = delayTime / 1000
+              reverbGain.gain.value = reverbGainValue / 50
+              volumeNode.gain.value = volume / 100
+              attackAndHoldTimeInSeconds = attack / 1000 + hold / 1000
+
+              if (attack) gainNode.gain.setValueCurveAtTime(attackCurve, audioContext.currentTime, attack / 1000)
+              else gainNode.gain.linearRampToValueAtTime(maxGain, audioContext.currentTime + attack / 1000)
+
+              if (hold) gainNode.gain.setValueAtTime(maxGain, audioContext.currentTime + attackAndHoldTimeInSeconds)
+
+              if (release) gainNode.gain.setValueCurveAtTime(releaseCurve, audioContext.currentTime + attackAndHoldTimeInSeconds, release / 1000)
+              else gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + attackAndHoldTimeInSeconds + release / 1000)
+
+              const startTime = anchor / 1000 + Math.random() * window / 1000
+              const startingBlock = reversed ? source.buffer.duration - startTime : startTime
+              const grainDuration = attack + hold + release
+              source.start(audioContext.currentTime, startingBlock, grainDuration / 1000)
+
+              source.addEventListener("ended", () => {
+                const index = gainNodes.indexOf(gainNode)
+                gainNode.disconnect()
+                gainNodes.splice(index, 1)
+                desk.querySelector(".grain-count").textContent = gainNodes.length
+              })
+
               desk.querySelector(".grain-count").textContent = gainNodes.length
-            })
 
-            desk.querySelector(".grain-count").textContent = gainNodes.length
-
-            if (i <= 5) {
-              setTimeout(() => {
+              if (i < 10) {
                 drawGrain(startTime * 1000, grainDuration, reversed)
-              }, startOffset)
+              }
             }
+
+            scheduledFunctions.push([fn, new Date().getTime() + (loopingInterval / density * i)])
           }
 
           requestAnimationFrame(loop)
@@ -833,6 +853,7 @@
         const densityControl = document.createElement("synth-knob")
         densityControl.setAttribute("parameter", "density")
         densityControl.setAttribute("value", density)
+        densityControl.setAttribute("unit", "Hz")
         densityControl.setAttribute("min", 0)
         densityControl.setAttribute("max", 1000)
         desk.querySelector(".wave-controls").appendChild(densityControl)
