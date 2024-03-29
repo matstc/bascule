@@ -425,7 +425,7 @@
         let anchor = 0
         let window = 1000
         let gainNodes = []
-        let maxGain = 0.6
+        let maxGain = 0.8
         let analyzer
         let meter
         let meterNeedle
@@ -598,7 +598,8 @@
 
               if (hold) gainNode.gain.setValueAtTime(maxGain, audioContext.currentTime + attackAndHoldTimeInSeconds)
 
-              if (release) gainNode.gain.setValueCurveAtTime(releaseCurve, audioContext.currentTime + attackAndHoldTimeInSeconds, release / 1000)
+              // Not sure why this is necessary, but adding 0.005 prevents overlapping.
+              if (release) gainNode.gain.setValueCurveAtTime(releaseCurve, audioContext.currentTime + attackAndHoldTimeInSeconds + 0.005, release / 1000)
               else gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + attackAndHoldTimeInSeconds + release / 1000)
 
               const startTime = anchor / 1000 + Math.random() * window / 1000
